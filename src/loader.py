@@ -1,12 +1,12 @@
 """Loading and cleaning the Mars crater dataset.
 
-The raw PDS export has two quirks that break naive analysis:
+The raw PDS export has one quirk that quietly breaks naive analysis:
+missing values are encoded as a single space rather than an empty field,
+so pandas reads them as the string ``' '``. ``isnull()`` then reports
+zero missing values for a column that is 99.7% empty.
 
-1. Column names carry trailing spaces (``'CRATER_ID '``).
-2. Missing values are encoded as a single space, not as an empty field, so
-   pandas reads them as the string ``' '`` instead of NaN.
-
-Both are fixed here so the rest of the package can assume clean input.
+The file also carries a UTF-8 BOM, which pandas strips on its own; it is
+read with ``utf-8-sig`` here to make that explicit rather than accidental.
 """
 
 from pathlib import Path
@@ -29,7 +29,8 @@ def load_craters(path=None):
     path = Path(path) if path else DATA_DIR / "marscrater_pds.csv"
     df = pd.read_csv(path, encoding="utf-8-sig")
 
-    # Strip whitespace from the headers themselves.
+    # Defensive: this export's headers are clean, but PDS files are not
+    # consistent about it and a stray space makes df['CRATER_ID'] a KeyError.
     df.columns = [c.strip() for c in df.columns]
 
     # Blank-looking strings become real NaN so .isnull() reports the truth.

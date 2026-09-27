@@ -1,15 +1,27 @@
-# Mars Crater EDA
+# Data Analysis with Python
 
-Exploratory data analysis of **384,343 Martian impact craters** from the NASA
-Planetary Data System, built with NumPy, pandas, Matplotlib and Seaborn.
+NumPy, pandas, Matplotlib and Seaborn — the learning notebooks, plus a
+full analysis pipeline built from them.
 
-One command loads the raw 17 MB export, cleans it, prints a full statistical
-report and writes seven charts.
+The pipeline analyses **384,343 Martian impact craters** from the NASA
+Planetary Data System. One command loads the raw 17 MB export, cleans it,
+prints a statistical report and writes seven charts.
 
 ```bash
 pip install -r requirements.txt
-python main.py
+
+python main.py                # the analysis pipeline
+python main.py --no-charts    # statistics only
+
+cd notebooks && jupyter notebook   # the learning notebooks
 ```
+
+## Two halves
+
+| | |
+|---|---|
+| [`notebooks/`](notebooks/) | Seven notebooks covering NumPy, pandas and visualisation, with assignments and solutions. All outputs committed, so they render on GitHub without running. |
+| `main.py` + [`src/`](src/) | The same techniques as a reusable package: load, clean, aggregate, plot. |
 
 ## What it does
 
@@ -85,19 +97,50 @@ Data-Analysis-with-Python/
 ├── main.py                  CLI entry point
 ├── data/
 │   ├── marscrater_pds.csv   384k craters, NASA PDS
-│   └── mtcars.csv           32 cars, grouped-bar example
+│   ├── mtcars.csv           32 cars, grouped-bar example
+│   ├── EP.health.csv        168 rows, time-series example
+│   └── data.xlsx            3 rows, read_excel example
 ├── src/
 │   ├── loader.py            load + clean + derive
 │   ├── analysis.py          statistics + aggregation
 │   └── plots.py             chart generation
+├── notebooks/               the learning notebooks
+│   ├── numpy.ipynb
+│   ├── Pandas.ipynb
+│   ├── Visualization.ipynb
+│   └── *assignments/solutions.ipynb
 └── outputs/                 generated PNGs
 ```
 
+See [`notebooks/README.md`](notebooks/README.md) for what each notebook
+covers, and which cells are expected to raise.
+
 ## Notes on the data
 
-The raw PDS export has two traps worth knowing about:
+The raw PDS export has one trap that is easy to miss and changes every
+conclusion you draw from it.
 
-1. Column headers carry trailing spaces, so `df['CRATER_ID']` raises `KeyError` until you strip them.
-2. Missing values are encoded as a **single space**, not an empty field. `pd.read_csv` reads them as the string `' '`, so `.isnull().sum()` reports zero missing values on a dataset that is 99.7% missing crater names. The fix is `df.replace(r'^\s*$', pd.NA, regex=True)`.
+**Missing values are encoded as a single space, not an empty field.**
+`pd.read_csv` reads them as the string `' '`, which is not null as far as
+pandas is concerned:
+
+```python
+df = pd.read_csv('data/marscrater_pds.csv')
+
+df['CRATER_NAME'].isnull().sum()                          # 0
+(df['CRATER_NAME'].str.strip() == '').sum()               # 383,356
+```
+
+So `.isnull().sum()` reports **zero** missing values on a column that is
+actually 99.7% empty. Any missing-data audit that trusts it is wrong
+before it starts. The fix is one line:
+
+```python
+df = df.replace(r'^\s*$', pd.NA, regex=True)
+```
+
+The file also carries a UTF-8 BOM. Pandas strips it automatically, so
+`df['CRATER_ID']` works either way; `loader.py` passes `utf-8-sig`
+explicitly to make that deliberate rather than lucky.
 
 Run `python main.py --no-charts` to print the statistics without generating plots.

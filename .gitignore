@@ -2,5 +2,9 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
-.ipynb_checkpoints/
 .DS_Store
+
+# Notebook artifacts
+.ipynb_checkpoints/
+notebooks/data.pkl
+notebooks/wine_data.csv
