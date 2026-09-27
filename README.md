@@ -81,7 +81,7 @@ line past ~5 km is the simple-to-complex crater transition.*
 ## Layout
 
 ```
-mars-crater-eda/
+Data-Analysis-with-Python/
 ├── main.py                  CLI entry point
 ├── data/
 │   ├── marscrater_pds.csv   384k craters, NASA PDS
